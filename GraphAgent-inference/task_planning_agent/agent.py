@@ -1,5 +1,7 @@
 from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
 
+from typing import Literal, get_args
+
 from pydantic import BaseModel, Field
 from langchain_core.output_parsers import JsonOutputParser
 # from utils.langgraph_utils import create_langgraph_agent
@@ -28,14 +30,13 @@ system_prompt_template = """
     {few_shot_examples}
     """
 
-TaskEnum = {
-    "predictive",
-    "generative"
-}
+TaskEnum = Literal["predictive", "generative"]
 
 class TaskFormulationOutput(BaseModel):
     knowledge_text: str = Field(description="Full and comprehensive user input text that contains inherent knowledge, excluding any tasks, questions or labels information.")
-    task_type: str = Field(description=f"Type of the task to handle. Must be one of {TaskEnum}")
+    task_type: TaskEnum = Field(
+        description=f"Type of the task to handle. Must be one of {', '.join(get_args(TaskEnum))}"
+    )
     user_annotation: str = Field(description="Any additional information provided by the user, such as task description, label candidates for predictive tasks, or and generation requirements for generative tasks, etc.")
 
 output_parser = JsonOutputParser(pydantic_object=TaskFormulationOutput)
@@ -45,7 +46,7 @@ system_prompt = PromptTemplate(
     input_variables=[],
     partial_variables={
         "format_instructions": output_parser.get_format_instructions(),
-        "task_enum": ",".join(TaskEnum),
+        "task_enum": ",".join(get_args(TaskEnum)),
         "few_shot_examples": few_shot_example_1 + few_shot_example_2 + few_shot_example_3,
     },
 )
