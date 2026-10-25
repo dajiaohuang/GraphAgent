@@ -74,11 +74,13 @@ def encode_node_text(pyg_graph):
         """
         {'x': tensor([[0.]]), 'unified_idx': tensor([0]), 'description': ["Type: paper_contribution; Name: Mamba_model; Description: This paper introduces Mamba, a linear-time sequence model with selective state spaces. It modifies traditional state space models (SSMs) to be input-dependent and presents engineering techniques for enhanced performance. Experiments validate the method's effectiveness, offering various pre-trained model options."]}
         """
-        x_dict_type_i = torch.zeros(len(node_set["description"]), 768)
+        x_dict_type_i = torch.zeros(
+            len(node_set["description"]), 768, device=sentence_transformer.device
+        )
 
         for i, node_text in enumerate(node_set["description"]):
             node_text_emb = sentence_transformer.encode([node_text], convert_to_tensor=True)[0]
-            x_dict_type_i[i] = node_text_emb
+            x_dict_type_i[i] = node_text_emb.to(x_dict_type_i.device)
         
         node_set["x"] = x_dict_type_i
 
