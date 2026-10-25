@@ -7,9 +7,19 @@ from langchain.prompts import SystemMessagePromptTemplate
 from .scaffold_text_and_keywords_prompts import scaffold_texts_from_input_example, keywords_from_scaffold_text_example
 from .scaffold_node_extraction_prompts import few_shot_example_1, few_shot_example_2, few_shot_example_3
 
+class ScaffoldNode(BaseModel):
+    id: int = Field(description="Stable identifier for this scaffold node.")
+    type: str = Field(description="The scaffold node's graph type.")
+    name: str = Field(description="The scaffold node's name.")
+
+
 class ScaffoldNodeExtractionOutput(BaseModel):
     thinking: str = Field(description="Your brief thoughts in a structured manner on what are the scaffold nodes.")
-    scaffold_nodes: list[dict] = Field(description="A list of scaffold nodes.")
+    scaffold_nodes: list[ScaffoldNode] = Field(description="A list of scaffold nodes.")
+
+
+def validate_scaffold_node_extraction_output(output: dict) -> dict:
+    return ScaffoldNodeExtractionOutput.model_validate(output).model_dump()
 
 def create_scaffold_node_extraction_chain(llm, few_shot_examples = []):
     if len(few_shot_examples) == 0:
@@ -65,6 +75,7 @@ def create_scaffold_node_extraction_chain(llm, few_shot_examples = []):
         | llm
         # | RunnableLambda(lambda x: (mem_store.mset([("scaffold_node_extraction_output", x)]), x))
         | output_parser
+        | validate_scaffold_node_extraction_output
     )
     return chain
 
