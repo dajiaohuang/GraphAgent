@@ -41,6 +41,10 @@ class TaskFormulationOutput(BaseModel):
 
 output_parser = JsonOutputParser(pydantic_object=TaskFormulationOutput)
 
+
+def validate_task_formulation_output(output: dict) -> dict:
+    return TaskFormulationOutput.model_validate(output).model_dump()
+
 system_prompt = PromptTemplate(
     template=system_prompt_template,
     input_variables=[],
@@ -58,6 +62,6 @@ def save_output_to_mem_store(output):
     
     return output
 
-proto_agent = llm | output_parser | save_output_to_mem_store
+proto_agent = llm | output_parser | validate_task_formulation_output | save_output_to_mem_store
 
-agent = prompt | llm | output_parser | save_output_to_mem_store
+agent = prompt | llm | output_parser | validate_task_formulation_output | save_output_to_mem_store
